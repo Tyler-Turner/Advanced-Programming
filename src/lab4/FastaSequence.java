@@ -1,4 +1,4 @@
-//Tyler Turner
+//Tyler Turner and Aaron Trautman
 //Aaron Trautman helped me shorten my logic down a bit during the parsing loop
 package lab4;
 
@@ -8,8 +8,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,16 +38,16 @@ public class FastaSequence {
 		
 		for( FastaSequence fs : fastaList)
 		{
-		System.out.println(fs.getHeader());
-		System.out.println(fs.getSequence());
+		//System.out.println(fs.getHeader());
+		//System.out.println(fs.getSequence());
 		//System.out.println(fs.getGCRatio());
 		//System.out.println("\n");
 		}
 
-		File input = new File("C:\\Users\\Tyler\\Desktop\\sequence2.txt");
-		File output = new File("C:\\Users\\Tyler\\Desktop\\output.txt");
+		File input = new File("C:\\Users\\Tyler\\Desktop\\seqsIn.txt");
+		File output = new File("C:\\Users\\Tyler\\Desktop\\output.tsv");
 		
-		writeUnique(input,output);
+		writeSpreadSheet(input,output);
 	}
 	//factory method to parse file being fed into it
 	public static List<FastaSequence> readFastaFile(String filepath) throws Exception{
@@ -53,7 +55,7 @@ public class FastaSequence {
 		List<FastaSequence> myList = new ArrayList<FastaSequence>();
 		//create new buffered reader to read in the file
 		BufferedReader reader = 
-				new BufferedReader(new FileReader(new File("C:\\Users\\Tyler\\Desktop\\sequence2.txt")));
+				new BufferedReader(new FileReader(new File(filepath)));
 		//create blank variables to hold values for header and sequence and keep track of where we are in the file
 		String header = null;
 		String sequence = "";
@@ -99,7 +101,7 @@ public class FastaSequence {
 		HashMap<String,Integer> myHashMap = new HashMap<String, Integer>();
 		
 		String seq= "";
-		int count = 0;
+		
 		
 		//scan through the list and put in the sequences as well as increment the count for ones already there
 		for(FastaSequence sequence : myList) {
@@ -137,6 +139,71 @@ public class FastaSequence {
 			
 		}
 
+	public static void writeSpreadSheet(File inFile, File outFile ) throws Exception {
+		
+		//use readfastafile method to read in file and put into list, and make a file writer
+		List<FastaSequence> myList = readFastaFile(inFile.getAbsolutePath());
+		BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+	
+		LinkedHashMap<String, Map<String,Integer>> finalHashMap = new LinkedHashMap<String, Map<String,Integer>>();
+		
+		List<String> tokens = new ArrayList<String>();
+		
+		for(FastaSequence fs: myList) {
+			String token = fs.getHeader().split("\\s")[1];
+			if(!tokens.contains(token))
+				tokens.add(token);
+		}
+		
+		Collections.sort(tokens);
+		tokens.add(0,"Sample");
+		
+		for(FastaSequence fs: myList) {
+			String seq = fs.getSequence();
+			Map<String, Integer> initMap = new HashMap<String, Integer>();	
+		
+		
+			for(String token : tokens) {
+				initMap.put(token,0);
+			}
+			finalHashMap.put(seq, initMap);
+		}
+		
+		for(FastaSequence fs: myList) {
+			String seq = fs.getSequence();
+			String header = fs.getHeader().split("\\s")[1];
+			
+			Map<String, Integer> seqThing = finalHashMap.get(seq);
+			
+			for(String key: seqThing.keySet()) {
+				if(key.equals(header)) {
+					seqThing.put(header, seqThing.get(key) + 1);
+				}
+			}
+			
+			finalHashMap.put(seq, seqThing);
+		}
+		
+		for(String token : tokens) {
+			StringBuffer line = new StringBuffer();
+			line.append(token + "\t");
+			
+			for(String key: finalHashMap.keySet()) {
+				if(token.equals("Sample")) {
+					line.append(key + "\t");
+				}
+				else {
+					Map<String, Integer> tokenMap = finalHashMap.get(key);
+					int count = tokenMap.get(token);
+					line.append(count + "\t");
+				}
+			}
+			writer.write(line + "\n");
+			
+		}
+		writer.flush();
+		writer.close();
+	}
 	
 
 		public String getHeader() {
