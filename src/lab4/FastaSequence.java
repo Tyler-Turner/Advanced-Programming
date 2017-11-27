@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.text.html.HTMLDocument.Iterator;
 
@@ -33,22 +34,34 @@ public class FastaSequence {
 
 	public static void main(String[] args) throws Exception {
 	//create new list to contain the file 
-		List<FastaSequence> fastaList = 
-				FastaSequence.readFastaFile("C:\\Users\\Tyler\\Desktop\\sequence2.txt");
+		//List<FastaSequence> fastaList = 
+			//	FastaSequence.readFastaFile("C:\\Users\\Tyler\\Desktop\\seqsIn.txt");
 		
-		for( FastaSequence fs : fastaList)
-		{
-		//System.out.println(fs.getHeader());
-		//System.out.println(fs.getSequence());
-		//System.out.println(fs.getGCRatio());
-		//System.out.println("\n");
+	/*	File sequenceDirectory = new File("C:\\Users\\Tyler\\Desktop\\fasta");
+		String[] filenames = sequenceDirectory.list();
+		for(String filename : filenames) {
+			if(filename.endsWith(".fas")) {
+				String seqFile = sequenceDirectory.getAbsolutePath();
+				System.out.println(seqFile);
+				List<FastaSequence> fastaList = 
+						FastaSequence.readFastaFile(seqFile);
+				
+				for( FastaSequence fs : fastaList)
+				{
+				
+				System.out.println(fs.getCount());
+				System.out.println("\n");
+				}
+			}
+			
 		}
-
+	
 		File input = new File("C:\\Users\\Tyler\\Desktop\\seqsIn.txt");
 		File output = new File("C:\\Users\\Tyler\\Desktop\\output.tsv");
 		
-		writeSpreadSheet(input,output);
-	}
+		//writeSpreadSheet(input,output);
+	*/ }
+	
 	//factory method to parse file being fed into it
 	public static List<FastaSequence> readFastaFile(String filepath) throws Exception{
 		//create new list
@@ -216,6 +229,34 @@ public class FastaSequence {
 			return this.sequence;
 		}
 		
+		public StringBuffer getCount() {
+			ConcurrentHashMap <String, Integer> CountHashMap = new ConcurrentHashMap <String, Integer>();
+			
+			for(int x =0; x < this.sequence.length(); x++) {
+				String base = "";
+				if(this.sequence.charAt(x) != 'A' || this.sequence.charAt(x) != 'G' || this.sequence.charAt(x) != 'C' || this.sequence.charAt(x) != 'T') {
+					base = Character.toString(this.sequence.charAt(x));
+				}
+				else {
+					base = "Unassigned";
+				}
+				if(CountHashMap.get(base) != null) {
+					CountHashMap.put(base, CountHashMap.get(base) + 1);
+				}
+				else {
+					CountHashMap.put(base, 1);
+				}
+			}
+			
+			StringBuffer output = new StringBuffer();
+			
+			for(String key : CountHashMap.keySet()) {
+				output.append(key + " = " + CountHashMap.get(key) + " ");
+			}
+			
+			return output;
+		}
+		
 		//method to keep track of G's and C's and total them, then divide that total by the sequence length
 		public float getGCRatio() {
 			
@@ -231,5 +272,40 @@ public class FastaSequence {
 			return (float)sum / this.sequence.length();
 
 		}	
+		
+public Integer[] getCounts() {
+			
+			
+			Integer[] counts = {0,0,0,0,0};
+			
+			for (int x = 0; x < this.sequence.length(); x++){
+				Character base = this.sequence.charAt(x);
+				
+				if (base == 'A') {
+					counts[0] = counts[0] + 1;
+					//A = A + 1;
+				}
+				else if (base == 'T') {
+					counts[1] = counts[1] + 1;
+					//T = T + 1;
+				}
+				else if (base == 'C') {
+					counts[2] = counts[2] + 1;
+					//C = C+1;
+				}
+				else if (base == 'G') {
+					counts[3] = counts[3] + 1;
+					//G=G+1;
+				}
+				else {
+					counts[4] = counts[4] + 1;
+					//N=N+1;
+				}
+				
+			 }
+			
+			
+			return counts;
+		}
 	}
 
